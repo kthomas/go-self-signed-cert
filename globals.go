@@ -45,10 +45,14 @@ func init() {
 
 		if os.Getenv("CERTIFICATE_PATH") != "" {
 			certificatePath = os.Getenv("CERTIFICATE_PATH")
+		} else {
+			certificatePath = defaultCertificatePath
 		}
 
 		if os.Getenv("PRIVATE_KEY_PATH") != "" {
 			privateKeyPath = os.Getenv("PRIVATE_KEY_PATH")
+		} else {
+			privateKeyPath = defaultPrivateKeyPath
 		}
 
 		if os.Getenv("PRIVATE_KEY_BITS") != "" {
