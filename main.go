@@ -69,6 +69,9 @@ func GenerateToDisk() (*string, *string, error) {
 		return nil, nil, err
 	}
 	_, err = keyOut.Write(privateKey)
+	if err != nil {
+		log.Errorf("Failed to write private key data to %s; %s", privateKeyPath, err.Error())
+	}
 	err = keyOut.Close()
 	if err != nil {
 		log.Errorf("Failed to generate self-signed certificate and write to disk; %s", err.Error())
@@ -82,10 +85,6 @@ func GenerateToDisk() (*string, *string, error) {
 		return nil, nil, err
 	}
 	_, err = certOut.Write(certificate)
-	if err != nil {
-		log.Errorf("Failed to write certificate data to %s; %s", certificatePath, err.Error())
-		return nil, nil, err
-	}
 	if err != nil {
 		log.Errorf("Failed to write certificate data to %s; %s", certificatePath, err.Error())
 	}
