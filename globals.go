@@ -13,7 +13,7 @@ const defaultCertificatePath = "./.server.crt"
 const defaultPrivateKeyPath = "./.private.key"
 
 const defaultCertificateValidityPeriod = time.Hour * 24 * 365 * 2
-const defaultPrivateKeyBits = 4096
+const defaultKeySize = 4096
 
 var (
 	log *logger.Logger
@@ -21,7 +21,7 @@ var (
 	certificateOrganization string
 	certificatePath         string
 	privateKeyPath          string
-	privateKeyBits          int
+	keySize                 int
 
 	bootstrapOnce sync.Once
 )
@@ -56,9 +56,9 @@ func init() {
 		}
 
 		if os.Getenv("PRIVATE_KEY_BITS") != "" {
-			privateKeyBits, _ = strconv.Atoi(os.Getenv("PRIVATE_KEY_BITS"))
+			keySize, _ = strconv.Atoi(os.Getenv("PRIVATE_KEY_BITS"))
 		} else {
-			privateKeyBits = defaultPrivateKeyBits
+			keySize = defaultKeySize
 		}
 	})
 }

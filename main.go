@@ -13,15 +13,15 @@ import (
 )
 
 // Generate a self-signed certificate; returns the certificate and its private key or an error
-func Generate() ([]byte, []byte, error) {
-	return GenerateWithKeySize(privateKeyBits)
+func Generate(dnsNames []string) ([]byte, []byte, error) {
+	return GenerateWithKeySize(keySize, dnsNames)
 }
 
 // GenerateToDisk generates a self-signed certificate and writes it and the private key to disk based
 // on the configured environment and returns the paths to the generated private key and certificate,
 // or an error.
-func GenerateToDisk() (*string, *string, error) {
-	privateKey, certificate, err := GenerateWithKeySize(privateKeyBits)
+func GenerateToDisk(dnsNames []string) (*string, *string, error) {
+	privateKey, certificate, err := GenerateWithKeySize(keySize, dnsNames)
 	if err != nil {
 		log.Errorf("Failed to generate self-signed certificate and persist to local disk; %s", err.Error())
 		return nil, nil, err
@@ -63,7 +63,7 @@ func GenerateToDisk() (*string, *string, error) {
 }
 
 // GenerateWithKeySize a self-signed certificate; returns the certificate and its private key or an error
-func GenerateWithKeySize(bits int) ([]byte, []byte, error) {
+func GenerateWithKeySize(bits int, dnsNames []string) ([]byte, []byte, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		log.Errorf("Failed to generate RSA private key; %s", err.Error())
@@ -80,6 +80,7 @@ func GenerateWithKeySize(bits int) ([]byte, []byte, error) {
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
+		DNSNames:              dnsNames,
 	}
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
