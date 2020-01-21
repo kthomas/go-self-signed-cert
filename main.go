@@ -14,49 +14,14 @@ import (
 
 // Generate a self-signed certificate; returns the certificate and its private key or an error
 func Generate() ([]byte, []byte, error) {
-	priv, err := rsa.GenerateKey(rand.Reader, privateKeyBits)
-	if err != nil {
-		log.Errorf("Failed to generate RSA private key; %s", err.Error())
-		return nil, nil, err
-	}
-
-	template := x509.Certificate{
-		SerialNumber: big.NewInt(1),
-		Subject: pkix.Name{
-			Organization: []string{certificateOrganization},
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(defaultCertificateValidityPeriod),
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-	}
-
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
-	if err != nil {
-		log.Errorf("Failed to create certificate; %s", err)
-		return nil, nil, err
-	}
-
-	keyBuf := new(bytes.Buffer)
-	if err := pem.Encode(keyBuf, pemBlockForKey(priv)); err != nil {
-		log.Errorf("Failed to write private key data to buffer; %s", err)
-	}
-
-	certBuf := new(bytes.Buffer)
-	if err := pem.Encode(certBuf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		log.Errorf("Failed to write certificate data to buffer; %s", err)
-		return nil, nil, err
-	}
-
-	return keyBuf.Bytes(), certBuf.Bytes(), nil
+	return GenerateWithKeySize(privateKeyBits)
 }
 
 // GenerateToDisk generates a self-signed certificate and writes it and the private key to disk based
 // on the configured environment and returns the paths to the generated private key and certificate,
 // or an error.
 func GenerateToDisk() (*string, *string, error) {
-	privateKey, certificate, err := Generate()
+	privateKey, certificate, err := GenerateWithKeySize(privateKeyBits)
 	if err != nil {
 		log.Errorf("Failed to generate self-signed certificate and persist to local disk; %s", err.Error())
 		return nil, nil, err
@@ -95,4 +60,44 @@ func GenerateToDisk() (*string, *string, error) {
 	}
 
 	return stringOrNil(privateKeyPath), stringOrNil(certificatePath), nil
+}
+
+// GenerateWithKeySize a self-signed certificate; returns the certificate and its private key or an error
+func GenerateWithKeySize(bits int) ([]byte, []byte, error) {
+	priv, err := rsa.GenerateKey(rand.Reader, bits)
+	if err != nil {
+		log.Errorf("Failed to generate RSA private key; %s", err.Error())
+		return nil, nil, err
+	}
+
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			Organization: []string{certificateOrganization},
+		},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(defaultCertificateValidityPeriod),
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
+	if err != nil {
+		log.Errorf("Failed to create certificate; %s", err)
+		return nil, nil, err
+	}
+
+	keyBuf := new(bytes.Buffer)
+	if err := pem.Encode(keyBuf, pemBlockForKey(priv)); err != nil {
+		log.Errorf("Failed to write private key data to buffer; %s", err)
+	}
+
+	certBuf := new(bytes.Buffer)
+	if err := pem.Encode(certBuf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		log.Errorf("Failed to write certificate data to buffer; %s", err)
+		return nil, nil, err
+	}
+
+	return keyBuf.Bytes(), certBuf.Bytes(), nil
 }
