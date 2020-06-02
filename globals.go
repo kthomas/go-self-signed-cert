@@ -32,7 +32,12 @@ func init() {
 		if lvl == "" {
 			lvl = "INFO"
 		}
-		log = logger.NewLogger("selfsignedcert", lvl, true)
+		var endpoint *string
+		if os.Getenv("SYSLOG_ENDPOINT") != "" {
+			endpt := os.Getenv("SYSLOG_ENDPOINT")
+			endpoint = &endpt
+		}
+		log = logger.NewLogger("selfsignedcert", lvl, endpoint)
 
 		if os.Getenv("CERTIFICATE_ORGANIZATION") != "" {
 			certificateOrganization = os.Getenv("CERTIFICATE_ORGANIZATION")
